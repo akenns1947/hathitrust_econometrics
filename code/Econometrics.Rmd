@@ -1,0 +1,27 @@
+---
+title: "Econometrics"
+author: "Austin Kennedy"
+date: "1/29/2022"
+output: html_document
+---
+
+```{r Clear memory and setup}
+rm(list=ls())
+options(scipen=999)
+```
+
+
+```{r Packages}
+library(tidyverse)
+```
+
+```{r Load Data}
+volumes <- read.csv("../input/volumes_all_opt_percentile.csv")
+```
+
+```{r Clean up}
+volumes <- volumes[,-1] #Drops 'X' which is just the index attached by Python
+```
+
+```{r Add year dummies}
+```
