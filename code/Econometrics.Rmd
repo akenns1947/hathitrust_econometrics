@@ -23,5 +23,28 @@ volumes <- read.csv("../input/volumes_all_opt_percentile.csv")
 volumes <- volumes[,-1] #Drops 'X' which is just the index attached by Python
 ```
 
-```{r Add year dummies}
+```{r Create years}
+years <- seq(1510,1890, by=1)
 ```
+
+```{r Create year dumies}
+obs <- nrow(volumes)
+for (year in years){
+  assign(paste0(year), ifelse(volumes$Year_rounded >= (year - 10) && volumes$Year_rounded <= (year + 10), 1, 0))
+}
+
+
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
