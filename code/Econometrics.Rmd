@@ -27,17 +27,9 @@ volumes <- volumes[,-1] #Drops 'X' which is just the index attached by Python
 years <- seq(1510,1890, by=1)
 ```
 
-```{r Create year dummies}
-obs <- nrow(volumes)
-for (year in years){
-assign(paste0(year), ifelse(volumes$Year_rounded >= (year - 10) & volumes$Year_rounded <= (year + 10), 1, 0))
-}
-
-
-```
-
 ```{r Create Year Dummies}
 #Create empty data frame with row dimension same as 'volumes', column dimension 'years'
+#Column names are 
 year_dummies <- data.frame(matrix(0, nrow = nrow(volumes), ncol = length(years),
                   dimnames = list(NULL, paste0("x", years[1]:years[length(years)]))))
 
@@ -46,6 +38,19 @@ for (i in 1:length(years)){
   year <- years[i]
   year_dummies[i] <- ifelse(volumes$Year_rounded >= (year - 10) & volumes$Year_rounded <= (year + 10), 1, 0)
 }
+```
+
+```{r Create interactions}
+sci_year <- volumes$Science*year_dummies
+pol_year <- volumes$Politics*year_dummies
+```
+
+```{r Merge data}
+df <- cbind(volumes, year_dummies, sci_year, pol_year)
+```
+
+```{r Regression}
+model <- lm(Percentile ~. - Year_rounded - Optimism - Religion, data = df)
 ```
 
 
