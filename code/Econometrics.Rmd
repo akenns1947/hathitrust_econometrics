@@ -43,6 +43,11 @@ for (i in 1:length(years)){
 ```{r Create interactions}
 sci_year <- volumes$Science*year_dummies
 pol_year <- volumes$Politics*year_dummies
+
+#Rename column names, regression cannot have repeated col names
+names(sci_year) <- gsub("x", "s", names(sci_year), fixed=TRUE) 
+names(pol_year) <- gsub("x", "p", names(pol_year), fixed=TRUE)
+# sci_year %>% rename_with( ~ paste0())
 ```
 
 ```{r Merge data}
@@ -50,10 +55,18 @@ df <- cbind(volumes, year_dummies, sci_year, pol_year)
 ```
 
 ```{r Regression}
-model <- lm(Percentile ~. - Year_rounded - Optimism - Religion, data = df)
+model <- lm(Percentile ~. - Year_rounded - Optimism - Religion - x1510, data = df)
+summary(model)
 ```
 
 
+```{r Test code}
+
+fit <- lm(Percentile ~ x1510, data=df)
+summary(fit)
+df %>% group_by(x1513) %>%
+  tally()
+```
 
 
 
