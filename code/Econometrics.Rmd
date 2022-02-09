@@ -55,12 +55,41 @@ df <- cbind(volumes, year_dummies, sci_year, pol_year)
 ```
 
 ```{r Regression}
-model <- lm(Percentile ~. - Year_rounded - Optimism - Religion + 0, data = df)
+model <- lm(Percentile ~. - Year_rounded - Optimism - Religion, data = df)
 summary(model)
 ```
 
+```{r Get coefficients}
+library(broom)
+results <- tidy(model)
+
+a1 <- results %>% filter(term == "(Intercept)") %>% pull(estimate)
+a2 <- results %>% filter(term == "Politics") %>% pull(estimate)
+a3 <- results %>% filter(term == "Science") %>% pull(estimate)
+a4 <- results %>% filter(substr(term, 1, 1) == "p") %>% pull(estimate)
+a5 <- results %>% filter(substr(term, 1, 1) == "s") %>% pull(estimate)
+a6 <- results %>% filter(substr(term, 1, 1) == "x") %>% pull(estimate)
+
+a1 <- rep(a1, length(a4))
+a2 <- rep(a2, length(a4))
+a3 <- rep(a3, length(a4))
+
+test <- as_tibble(cbind(a1, a2, a3, a4, a5, a6))
+```
 
 ```{r Test code}
+results <- as_tibble(c(coef(model,  )))
+results <- as_tibble(coef(summary(model, complete=TRUE)))
+
+library(broom)
+results <- tidy(model)
+
+a1 <- results %>% filter(term == "(Intercept)")
+a2 <- results %>% filter(term == "Politics")
+a3 <- results %>% filter(term == "Science")
+a4 <- results %>% filter(substr(term, 1, 1) == "p")
+a5 <- results %>% filter(substr(term, 1, 1) == "s")
+a6 <- results %>% filter(substr(term, 1, 1) == "x")
 
 fit <- lm(Percentile ~ x1510, data=df)
 summary(fit)
