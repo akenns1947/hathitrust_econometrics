@@ -74,27 +74,42 @@ a1 <- rep(a1, length(a4))
 a2 <- rep(a2, length(a4))
 a3 <- rep(a3, length(a4))
 
-test <- as_tibble(cbind(a1, a2, a3, a4, a5, a6))
+cffts <- as_tibble(cbind(a1, a2, a3, a4, a5, a6))
+
+cffts <- cffts %>%
+  add_column(Year = years)
+
+ggplot(cffts, aes(x = Year)) +
+  geom_line(aes(y = a1 + a6, colour = 'religion')) +
+  geom_line(aes(y = a1 + a2 + a4 + a6, colour = 'politics')) +
+  geom_line(aes(y = a1 + a3 + a5 + a6, colour = 'science')) +
+  scale_color_manual(name = "Legend", values = c('religion' = 'blue', 'politics' = 'red', 'science' = 'green'))
+
+ggplot(subset(cffts, Year %in% seq(1700,1890,1)), aes(x = Year)) +
+  geom_line(aes(y = a1 + a6, colour = 'religion')) +
+  geom_line(aes(y = a1 + a2 + a4 + a6, colour = 'politics')) +
+  geom_line(aes(y = a1 + a3 + a5 + a6, colour = 'science')) +
+  scale_color_manual(name = "Legend", values = c('religion' = 'blue', 'politics' = 'red', 'science' = 'green'))
 ```
 
 ```{r Test code}
-results <- as_tibble(c(coef(model,  )))
-results <- as_tibble(coef(summary(model, complete=TRUE)))
-
-library(broom)
-results <- tidy(model)
-
-a1 <- results %>% filter(term == "(Intercept)")
-a2 <- results %>% filter(term == "Politics")
-a3 <- results %>% filter(term == "Science")
-a4 <- results %>% filter(substr(term, 1, 1) == "p")
-a5 <- results %>% filter(substr(term, 1, 1) == "s")
-a6 <- results %>% filter(substr(term, 1, 1) == "x")
-
-fit <- lm(Percentile ~ x1510, data=df)
-summary(fit)
-df %>% group_by(x1513) %>%
-  tally()
+# results <- as_tibble(c(coef(model,  )))
+# results <- as_tibble(coef(summary(model, complete=TRUE)))
+# 
+# library(broom)
+# results <- tidy(model)
+# 
+# a1 <- results %>% filter(term == "(Intercept)")
+# a2 <- results %>% filter(term == "Politics")
+# a3 <- results %>% filter(term == "Science")
+# a4 <- results %>% filter(substr(term, 1, 1) == "p")
+# a5 <- results %>% filter(substr(term, 1, 1) == "s")
+# a6 <- results %>% filter(substr(term, 1, 1) == "x")
+# 
+# fit <- lm(Percentile ~ x1510, data=df)
+# summary(fit)
+# df %>% group_by(x1513) %>%
+#   tally()
 ```
 
 
