@@ -55,7 +55,14 @@ df <- cbind(volumes, year_dummies, sci_year, pol_year)
 ```
 
 ```{r Regression}
-model <- lm(Percentile ~. - Year_rounded - Optimism - Religion, data = df)
+#Choose which year to omit
+a <- 1800
+
+reg_omit <- c("Year_rounded", "Optimism", "Religion", paste0("x", a), paste0("s", a), paste0("p", a))
+
+# model <- lm(Percentile ~. - Year_rounded - Optimism - Religion - x1800 - s1800 - p1800, data = df)
+# model <- lm(Percentile ~. - Year_rounded - Optimism - Religion - b, data = df)
+model <- lm(Percentile ~., data = df[, !(colnames(df) %in% reg_omit)])
 summary(model)
 ```
 
@@ -76,8 +83,9 @@ a3 <- rep(a3, length(a4))
 
 cffts <- as_tibble(cbind(a1, a2, a3, a4, a5, a6))
 
+
 cffts <- cffts %>%
-  add_column(Year = years)
+  add_column(Year = years[years != a])
 
 ggplot(cffts, aes(x = Year)) +
   geom_line(aes(y = a1 + a6, colour = 'religion')) +
@@ -110,6 +118,10 @@ ggplot(subset(cffts, Year %in% seq(1700,1890,1)), aes(x = Year)) +
 # summary(fit)
 # df %>% group_by(x1513) %>%
 #   tally()
+mod <- lm(Percentile ~ Politics + Science + Politics*factor(Year_rounded) + Science*factor(Year_rounded) + factor(Year_rounded), data = df)
+summary(mod)
+
+res <- tidy(mod)
 ```
 
 
