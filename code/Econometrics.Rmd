@@ -152,6 +152,13 @@ ggplot(subset(betas, yr %in% seq(1500,1900,1)), aes(x = yr)) +
 
 ggsave("../output/results_full_single.png")
 
+ggplot(subset(betas, yr %in% seq(1700,1900,1)), aes(x = yr)) +
+  geom_line(aes(y = b6, colour = 'time')) +
+  # geom_line(aes(y = b4, colour = 'politics')) +
+  # geom_line(aes(y = b5, colour = 'science')) +
+  scale_color_manual(name = "Legend", values = c('time' = 'blue', 'politics' = 'red', 'science' = 'green'))+
+  labs(title = "Single-year", x = "Year", y = "Values")
+
 ```
 
 
