@@ -54,7 +54,7 @@ names(pol_year) <- gsub("x", "p", names(pol_year), fixed=TRUE)
 df <- cbind(volumes, year_dummies, sci_year, pol_year)
 ```
 
-```{r Regression}
+```{r Regression using bins}
 #Choose which year to omit
 a <- 1800
 
@@ -91,37 +91,67 @@ ggplot(cffts, aes(x = Year)) +
   geom_line(aes(y = a1 + a6, colour = 'religion')) +
   geom_line(aes(y = a1 + a2 + a4 + a6, colour = 'politics')) +
   geom_line(aes(y = a1 + a3 + a5 + a6, colour = 'science')) +
-  scale_color_manual(name = "Legend", values = c('religion' = 'blue', 'politics' = 'red', 'science' = 'green'))
+  scale_color_manual(name = "Legend", values = c('religion' = 'blue', 'politics' = 'red', 'science' = 'green'))+
+  labs(title = "20-year bins", x = "Year", y = "Value")
+
+ggsave("../output/results_full_binned.png")
 
 ggplot(subset(cffts, Year %in% seq(1700,1890,1)), aes(x = Year)) +
   geom_line(aes(y = a1 + a6, colour = 'religion')) +
   geom_line(aes(y = a1 + a2 + a4 + a6, colour = 'politics')) +
   geom_line(aes(y = a1 + a3 + a5 + a6, colour = 'science')) +
-  scale_color_manual(name = "Legend", values = c('religion' = 'blue', 'politics' = 'red', 'science' = 'green'))
+  scale_color_manual(name = "Legend", values = c('religion' = 'blue', 'politics' = 'red', 'science' = 'green'))+
+  labs(title = "20-year bins", x = "Year", y = "Value")
+
+ggsave("../output/results_1700_binned.png")
 ```
 
-```{r Test code}
-# results <- as_tibble(c(coef(model,  )))
-# results <- as_tibble(coef(summary(model, complete=TRUE)))
-# 
-# library(broom)
-# results <- tidy(model)
-# 
-# a1 <- results %>% filter(term == "(Intercept)")
-# a2 <- results %>% filter(term == "Politics")
-# a3 <- results %>% filter(term == "Science")
-# a4 <- results %>% filter(substr(term, 1, 1) == "p")
-# a5 <- results %>% filter(substr(term, 1, 1) == "s")
-# a6 <- results %>% filter(substr(term, 1, 1) == "x")
-# 
-# fit <- lm(Percentile ~ x1510, data=df)
-# summary(fit)
-# df %>% group_by(x1513) %>%
-#   tally()
+```{r Regression with no bins}
+
 mod <- lm(Percentile ~ Politics + Science + Politics*factor(Year_rounded) + Science*factor(Year_rounded) + factor(Year_rounded), data = df)
 summary(mod)
+```
+
+```{r Get coefficients}
 
 res <- tidy(mod)
+
+b1 <- res %>% filter(term == "(Intercept)") %>% pull(estimate)
+b2 <- res %>% filter(term == "Politics") %>% pull(estimate)
+b3 <- res %>% filter(term == "Science") %>% pull(estimate)
+b4 <- res %>% filter(substr(term, 1, 9) == "Politics:") %>% pull(estimate)
+b5 <- res %>% filter(substr(term, 1, 8) == "Science:") %>% pull(estimate)
+b6 <- res %>% filter(substr(term, 1, 6) == "factor") %>% pull(estimate)
+yr <- res %>% filter(substr(term, 1, 6) == "factor") %>% pull(term)
+yr <- substr(yr, nchar(yr)-3, nchar(yr))
+yr <- as.numeric(yr)
+
+b1 <- rep(b1, length(b4))
+b2 <- rep(b2, length(b4))
+b3 <- rep(b3, length(b4))
+
+betas <- as_tibble(cbind(b1, b2, b3, b4, b5, b6, yr))
+
+
+
+ggplot(subset(betas, yr %in% seq(1700,1890,1)), aes(x = yr)) +
+  geom_line(aes(y = b1 + b6, colour = 'religion')) +
+  geom_line(aes(y = b1 + b2 + b4 + b6, colour = 'politics')) +
+  geom_line(aes(y = b1 + b3 + b5 + b6, colour = 'science')) +
+  scale_color_manual(name = "Legend", values = c('religion' = 'blue', 'politics' = 'red', 'science' = 'green'))+
+  labs(title = "Single-year", x = "Year", y = "Values")
+
+ggsave("../output/results_1700_single.png")
+
+ggplot(subset(betas, yr %in% seq(1500,1900,1)), aes(x = yr)) +
+  geom_line(aes(y = b1 + b6, colour = 'religion')) +
+  geom_line(aes(y = b1 + b2 + b4 + b6, colour = 'politics')) +
+  geom_line(aes(y = b1 + b3 + b5 + b6, colour = 'science')) +
+  scale_color_manual(name = "Legend", values = c('religion' = 'blue', 'politics' = 'red', 'science' = 'green'))+
+  labs(title = "Single-year", x = "Year", y = "Values")
+
+ggsave("../output/results_full_single.png")
+
 ```
 
 
