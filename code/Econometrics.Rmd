@@ -54,7 +54,7 @@ names(pol_year) <- gsub("x", "p", names(pol_year), fixed=TRUE)
 df <- cbind(volumes, year_dummies, sci_year, pol_year)
 ```
 
-```{r Regression using bins}
+```{r Regressions using bins}
 #Choose which year to omit
 a <- 1800
 
@@ -62,8 +62,9 @@ reg_omit <- c("Year_rounded", "Optimism", "Religion", paste0("x", a), paste0("s"
 
 # model <- lm(Percentile ~. - Year_rounded - Optimism - Religion - x1800 - s1800 - p1800, data = df)
 # model <- lm(Percentile ~. - Year_rounded - Optimism - Religion - b, data = df)
-model <- lm(Percentile ~., data = df[, !(colnames(df) %in% reg_omit)])
-summary(model)
+model_1 <- lm(Percentile ~ Science + Politics, data = df)
+model_2 <- lm(Percentile ~., data = df[, !(colnames(df) %in% reg_omit)])
+model_3 <- lm(Percentile ~ Science + Politics + Science*Politics + Science*Religion + Religion*Politics, data = df)
 ```
 
 ```{r Get coefficients}
