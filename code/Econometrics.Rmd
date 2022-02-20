@@ -13,6 +13,7 @@ options(scipen=999)
 
 ```{r Packages}
 library(tidyverse)
+library(fixest)
 ```
 
 ```{r Load Data}
@@ -41,30 +42,53 @@ for (i in 1:length(years)){
 ```
 
 ```{r Create interactions}
-sci_year <- volumes$Science*year_dummies
-pol_year <- volumes$Politics*year_dummies
-
-#Rename column names, regression cannot have repeated col names
-names(sci_year) <- gsub("x", "s", names(sci_year), fixed=TRUE) 
-names(pol_year) <- gsub("x", "p", names(pol_year), fixed=TRUE)
+# sci_year <- volumes$Science*year_dummies
+# pol_year <- volumes$Politics*year_dummies
+# 
+# #Rename column names, regression cannot have repeated col names
+# names(sci_year) <- gsub("x", "s", names(sci_year), fixed=TRUE) 
+# names(pol_year) <- gsub("x", "p", names(pol_year), fixed=TRUE)
 # sci_year %>% rename_with( ~ paste0())
 ```
 
 ```{r Merge data}
-df <- cbind(volumes, year_dummies, sci_year, pol_year)
+# df <- cbind(volumes, year_dummies, sci_year, pol_year)
+df <- cbind(volumes, year_dummies)
 ```
 
 ```{r Regressions using bins}
 #Choose which year to omit
-a <- 1800
+# a <- 1800
+# 
+# reg_omit <- c("Year_rounded", "Optimism", "Religion", paste0("x", a), paste0("s", a), paste0("p", a))
 
-reg_omit <- c("Year_rounded", "Optimism", "Religion", paste0("x", a), paste0("s", a), paste0("p", a))
+dummies <- paste0("x", 1510:1890)
 
 # model <- lm(Percentile ~. - Year_rounded - Optimism - Religion - x1800 - s1800 - p1800, data = df)
 # model <- lm(Percentile ~. - Year_rounded - Optimism - Religion - b, data = df)
-model_1 <- lm(Percentile ~ Science + Politics, data = df)
-model_2 <- lm(Percentile ~., data = df[, !(colnames(df) %in% reg_omit)])
-model_3 <- lm(Percentile ~ Science + Politics + Science*Politics + Science*Religion + Religion*Politics, data = df)
+model_1 <- feols(Percentile ~ Science + Politics, df)
+model_2 <-feols(Percentile ~ Science + Politics + .[dummies] + .[".[dummies]*Science"] + .[".[dummies]*Politics"], df)
+model_3 <- feols(Percentile ~ Science + Politics + Science*Politics + Science*Religion + Religion*Politics - Religion, df)
+# model_1 <- lm(Percentile ~ Science + Politics, data = df)
+# model_2 <- lm(Percentile ~., data = df[, !(colnames(df) %in% reg_omit)])
+model_4 <- lm(Percentile ~ Science + Politics + Science*Politics + Science*Religion + Religion*Politics, data = df)
+```
+
+```{r Tables for main coefficients}
+library(stargazer)
+library(modelsummary)
+etable(list(model_1, model_2, model_3),
+       drop = "x1",
+       )
+
+stargazer(model_1, model_2, model_3, type = 'text')
+etable(model_1)
+etable(model_2)
+etable(model_3)
+summary(model_4)
+modelsummary(list(model_1, model_2, model_3),
+             coef_omit = "[^Science|Politics|(Intercept)|Science × Politics]",
+             output="markdown")
 ```
 
 ```{r Get coefficients}
@@ -162,6 +186,11 @@ ggplot(subset(betas, yr %in% seq(1700,1900,1)), aes(x = yr)) +
 
 ```
 
+```{r Test Code}
+dummies <- paste0("x", 1510:1890)
+test <- feols(Percentile ~ Science + Politics + .[dummies] + .[".[dummies]*Science"], df)
+summary(test)
+```
 
 
 
