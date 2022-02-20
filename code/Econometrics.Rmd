@@ -77,18 +77,33 @@ model_4 <- lm(Percentile ~ Science + Politics + Science*Politics + Science*Relig
 ```{r Tables for main coefficients}
 library(stargazer)
 library(modelsummary)
-etable(list(model_1, model_2, model_3),
-       drop = "x1",
-       )
+library(broom)
+# etable(list(model_1, model_2, model_3),
+#        drop = "x1"
+#        )
+# 
+# stargazer(model_1, model_2, model_3, type = 'text')
+# etable(model_1)
+# etable(model_2)
+# etable(model_3)
+# summary(model_4)
+# modelsummary(list(model_1, model_2, model_3),
+#              coef_omit = "[^Science|Politics|(Intercept)|Science × Politics]",
+#              output="markdown")
 
-stargazer(model_1, model_2, model_3, type = 'text')
-etable(model_1)
-etable(model_2)
-etable(model_3)
-summary(model_4)
+row <- data.frame(
+  "Coefficients" = "Time FE",
+  "Model 1" = "No",
+  "Model 2" = "Yes",
+  "Model 3" = "No"
+)
+attr(row, "position") <- 13
 modelsummary(list(model_1, model_2, model_3),
-             coef_omit = "[^Science|Politics|(Intercept)|Science × Politics]",
-             output="markdown")
+             coef_omit = "x1",
+             add_rows = row,
+             stars = TRUE,
+             gof_omit = "R2 Within|R2 P|Log|AIC|BIC|Std",
+             output="latex")
 ```
 
 ```{r Get coefficients}
