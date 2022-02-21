@@ -71,7 +71,7 @@ model_2 <-feols(Percentile ~ Science + Politics + .[dummies] + .[".[dummies]*Sci
 model_3 <- feols(Percentile ~ Science + Politics + Science*Politics + Science*Religion + Religion*Politics - Religion, df)
 # model_1 <- lm(Percentile ~ Science + Politics, data = df)
 # model_2 <- lm(Percentile ~., data = df[, !(colnames(df) %in% reg_omit)])
-model_4 <- lm(Percentile ~ Science + Politics + Science*Politics + Science*Religion + Religion*Politics, data = df)
+model_4 <- feols(Percentile ~ Science + Politics + Science*Politics + Science*Religion + Religion*Politics + .[dummies] - Religion , data = df)
 ```
 
 ```{r Tables for main coefficients}
@@ -91,14 +91,16 @@ library(broom)
 #              coef_omit = "[^Science|Politics|(Intercept)|Science × Politics]",
 #              output="markdown")
 
+models <- list(model_1, model_2, model_3, model_4)
 row <- data.frame(
   "Coefficients" = "Time FE",
   "Model 1" = "No",
   "Model 2" = "Yes",
-  "Model 3" = "No"
+  "Model 3" = "No",
+  "Model 4" = "Yes"
 )
 attr(row, "position") <- 13
-modelsummary(list(model_1, model_2, model_3),
+modelsummary(models,
              coef_omit = "x1",
              add_rows = row,
              stars = TRUE,
