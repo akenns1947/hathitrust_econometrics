@@ -67,11 +67,17 @@ dummies <- paste0("x", 1510:1890)
 # model <- lm(Percentile ~. - Year_rounded - Optimism - Religion - x1800 - s1800 - p1800, data = df)
 # model <- lm(Percentile ~. - Year_rounded - Optimism - Religion - b, data = df)
 model_1 <- feols(Percentile ~ Science + Politics, df)
-model_2 <-feols(Percentile ~ Science + Politics + .[dummies] + .[".[dummies]*Science"] + .[".[dummies]*Politics"], df)
-model_3 <- feols(Percentile ~ Science + Politics + Science*Politics + Science*Religion + Religion*Politics - Religion, df)
+model_2 <- feols(Percentile ~ Science + Politics + .[dummies], df)
+model_3 <- feols(Percentile ~ Science + Politics + .[dummies] + .[".[dummies]*Science"] + .[".[dummies]*Politics"], df)
+  
+model_4 <- feols(Percentile ~ Science + Politics + Science*Politics + Science*Religion + Religion*Politics - Religion, df)
 # model_1 <- lm(Percentile ~ Science + Politics, data = df)
 # model_2 <- lm(Percentile ~., data = df[, !(colnames(df) %in% reg_omit)])
-model_4 <- feols(Percentile ~ Science + Politics + Science*Politics + Science*Religion + Religion*Politics + .[dummies] - Religion , data = df)
+model_5 <- feols(Percentile ~ Science + Politics + Science*Politics + Science*Religion + Religion*Politics + .[dummies] - Religion , data = df)
+
+model_6 <- feols(Percentile ~ Science + Politics + Science*Politics + Science*Religion + Religion*Politics + .[dummies] + .[".[dummies]*Science"] + .[".[dummies]*Politics"] + .[".[dummies]*Science*Politics"] + .[".[dummies]*Science*Religion"] + .[".[dummies]*Religion*Politics"] - Religion, data = df)
+
+
 ```
 
 ```{r Tables for main coefficients}
@@ -91,18 +97,33 @@ library(broom)
 #              coef_omit = "[^Science|Politics|(Intercept)|Science × Politics]",
 #              output="markdown")
 
-models <- list(model_1, model_2, model_3, model_4)
-row <- data.frame(
+models <- list(model_1, model_2, model_3, model_4, model_5, model_6)
+time_fe <- data.frame(
   "Coefficients" = "Time FE",
   "Model 1" = "No",
   "Model 2" = "Yes",
-  "Model 3" = "No",
-  "Model 4" = "Yes"
+  "Model 3" = "Yes",
+  "Model 4" = "No",
+  "Model 5" = "Yes",
+  "Model 6" = "Yes"
 )
-attr(row, "position") <- 13
+time_fe_int <- data.frame(
+  "Coefficients" = "Time FE Interactions",
+  "Model 1" = "No",
+  "Model 2" = "No",
+  "Model 3" = "Yes",
+  "Model 4" = "No",
+  "Model 5" = "No",
+  "Model 6" = "Yes"
+)
+
+rows <- rbind.data.frame(time_fe,time_fe_int)
+
+
+attr(rows, "position") <- c(13,14)
 modelsummary(models,
              coef_omit = "x1",
-             add_rows = row,
+             add_rows = rows,
              stars = TRUE,
              gof_omit = "R2 Within|R2 P|Log|AIC|BIC|Std",
              output="latex")
