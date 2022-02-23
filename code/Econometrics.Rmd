@@ -127,6 +127,11 @@ modelsummary(models,
              stars = TRUE,
              gof_omit = "R2 Within|R2 P|Log|AIC|BIC|Std",
              output="latex")
+
+modelsummary(models, 
+             statistic = NULL,
+             stars = TRUE,
+             output = "../output/results.txt")
 ```
 
 ```{r Get coefficients}
