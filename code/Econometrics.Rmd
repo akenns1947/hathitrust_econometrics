@@ -24,11 +24,12 @@ volumes <- read.csv("../input/volumes_all_opt_percentile.csv")
 volumes <- volumes[,-1] #Drops 'X' which is just the index attached by Python
 ```
 
-```{r Create years}
+```{r Create years and bins}
 years <- seq(1510,1890, by=1)
+bins <- seq(1500, 1900, by = 20)
 ```
 
-```{r Create Year Dummies}
+```{r Create Year and Bin Dummies}
 #Create empty data frame with row dimension same as 'volumes', column dimension 'years'
 #Column names are 
 year_dummies <- data.frame(matrix(0, nrow = nrow(volumes), ncol = length(years),
@@ -39,6 +40,14 @@ for (i in 1:length(years)){
   year <- years[i]
   year_dummies[i] <- ifelse(volumes$Year_rounded >= (year - 10) & volumes$Year_rounded <= (year + 10), 1, 0)
 }
+
+bin_dummies <- data.frame(matrix(0, nrow = nrow(volumes), ncol = length(bins),
+                  dimnames = list(NULL, paste0("x", bins[1]:bins[length(bins)]))))
+
+# for (i in 1:length(bins)){
+#   bin <- bins[i]
+#   bin_dummies <- ifelse( )
+# }
 ```
 
 ```{r Create interactions}
