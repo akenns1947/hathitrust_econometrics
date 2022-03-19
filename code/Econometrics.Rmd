@@ -26,14 +26,14 @@ volumes <- volumes[,-1] #Drops 'X' which is just the index attached by Python
 
 ```{r Create years and bins}
 years <- seq(1510,1890, by=1)
-bins <- seq(1500, 1900, by = 20)
+bins <- seq(1510, 1890, by = 20)
 ```
 
 ```{r Create Year and Bin Dummies}
 #Create empty data frame with row dimension same as 'volumes', column dimension 'years'
 #Column names are 
 year_dummies <- data.frame(matrix(0, nrow = nrow(volumes), ncol = length(years),
-                  dimnames = list(NULL, paste0("x", years[1]:years[length(years)]))))
+                  dimnames = list(NULL, paste0("x", seq(years[1],years[length(years)],by =1)))))
 
 #Populate with dummies
 for (i in 1:length(years)){
@@ -42,12 +42,12 @@ for (i in 1:length(years)){
 }
 
 bin_dummies <- data.frame(matrix(0, nrow = nrow(volumes), ncol = length(bins),
-                  dimnames = list(NULL, paste0("x", bins[1]:bins[length(bins)]))))
+                  dimnames = list(NULL, paste0("x", seq(bins[1],bins[length(bins)], by=20)))))
 
-# for (i in 1:length(bins)){
-#   bin <- bins[i]
-#   bin_dummies <- ifelse( )
-# }
+for (i in 1:length(bins)){
+  year <- bins[i]
+  bin_dummies[i] <- ifelse(volumes$Year_rounded >= (year - 10) & volumes$Year_rounded <= (year + 10), 1, 0)
+}
 ```
 
 ```{r Create interactions}
@@ -63,6 +63,7 @@ bin_dummies <- data.frame(matrix(0, nrow = nrow(volumes), ncol = length(bins),
 ```{r Merge data}
 # df <- cbind(volumes, year_dummies, sci_year, pol_year)
 df <- cbind(volumes, year_dummies)
+df2 <- cbind(volumes, bin_dummies)
 ```
 
 ```{r Regressions using bins}
@@ -239,9 +240,8 @@ ggplot(subset(betas, yr %in% seq(1700,1900,1)), aes(x = yr)) +
 ```
 
 ```{r Test Code}
-dummies <- paste0("x", 1510:1890)
-test <- feols(Percentile ~ Science + Politics + .[dummies] + .[".[dummies]*Science"], df)
-summary(test)
+bin_dummies <- data.frame(matrix(0, nrow = nrow(volumes), ncol = length(bins),
+                  dimnames = list(NULL, paste0("x", seq(bins[1],bins[length(bins)], by=20)))))
 ```
 
 
