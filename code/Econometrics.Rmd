@@ -14,6 +14,7 @@ options(scipen=999)
 ```{r Packages}
 library(tidyverse)
 library(fixest)
+library(data.table)
 ```
 
 ```{r Load Data}
@@ -27,6 +28,35 @@ volumes <- volumes[,-1] #Drops 'X' which is just the index attached by Python
 ```{r Create years and bins}
 years <- seq(1510,1890, by=1)
 bins <- seq(1510, 1890, by = 20)
+```
+
+
+
+```{r Assign bins to volumes}
+a = data.table(Value=volumes$Year_rounded)
+
+a[,merge:=Value]
+
+b = data.table(Value = bins)
+
+b[,merge:=Value]
+
+setkeyv(a, c('merge'))
+
+setkeyv(b, c('merge'))
+
+rounded = b[a, roll='nearest']
+
+rounded <- distinct(rounded)
+
+volumes <- data.table(volumes)
+
+volumes <- merge(volumes, rounded, by.x = "Year_rounded", by.y = "merge")
+
+volumes <- volumes %>%
+  subset(select = -c(i.Value)) %>%
+  rename(bin = Value)
+
 ```
 
 ```{r Create Year and Bin Dummies}
@@ -48,6 +78,8 @@ for (i in 1:length(bins)){
   year <- bins[i]
   bin_dummies[i] <- ifelse(volumes$Year_rounded >= (year - 10) & volumes$Year_rounded <= (year + 10), 1, 0)
 }
+
+rounded <- which.min(abs(volumes$Year_rounded - bins))
 ```
 
 ```{r Create interactions}
@@ -240,8 +272,33 @@ ggplot(subset(betas, yr %in% seq(1700,1900,1)), aes(x = yr)) +
 ```
 
 ```{r Test Code}
-bin_dummies <- data.frame(matrix(0, nrow = nrow(volumes), ncol = length(bins),
-                  dimnames = list(NULL, paste0("x", seq(bins[1],bins[length(bins)], by=20)))))
+a = data.table(Value=volumes$Year_rounded)
+
+a[,merge:=Value]
+
+b = data.table(Value = bins)
+
+b[,merge:=Value]
+
+setkeyv(a, c('merge'))
+
+setkeyv(b, c('merge'))
+
+rounded = b[a, roll='nearest']
+
+rounded <- distinct(rounded)
+
+volumes <- data.table(volumes)
+
+both <- merge(volumes, rounded, by.x = "Year_rounded", by.y = "merge")
+
+both <- both %>%
+  subset(select = -c(i.Value)) %>%
+  rename(bin = Value)
+
+
+
+
 ```
 
 
