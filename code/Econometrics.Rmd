@@ -16,6 +16,7 @@ library(tidyverse)
 library(fixest)
 library(data.table)
 library(broom)
+library(modelsummary)
 ```
 
 ```{r Load Data}
@@ -66,8 +67,23 @@ volumes <- volumes %>%
 ```{r Regressions}
 volumes <- as.tibble(volumes)
 #Regression by year
-volumes %>% group_by(bin_20) %>%
+mod1 <- volumes %>% group_by(bin_20) %>%
   do(tidy(feols(Percentile ~ Science + Politics + Science*Religion + Science*Politics + Religion*Politics, data = .)))
+
+#Not sure how to list results yet
+mod1 <- na.omit(mod1)
+
+
+modelsummary(mod1,
+             statistic = NULL,
+             output = "../output/marginal_effects.txt")
+
+mod1 <- data.frame(mod1)
+
+a <- list(mod1$bin_20)
+
+datasummary(list(bin_20) ~ estimate, data = mod1,
+            output = 'markdown')
 ```
 
 ```{r Create Year and Bin Dummies}
