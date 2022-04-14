@@ -74,27 +74,29 @@ volumes <- as.tibble(volumes)
 
 mod1 <- volumes %>% group_by(bin_20) %>%
   do(x = lm(Percentile ~ Science + Politics + Science*Religion + Science*Politics + Religion*Politics - Religion, data = .))
+```
 
+```{r Marginal Effects and Predicted Values}
 #Make empty dataframes
-s100 <- as_tibble(matrix(0, length(bins), 7))
-colnames(s100) <- c("bin", "marginal", "std. error", "y_hat", "lower", "upper", "se_fit")
+s100 <- as_tibble(matrix(0, length(bins), 8))
+colnames(s100) <- c("label", "bin", "marginal", "se", "y_hat", "lower", "upper", "se_fit")
 s100 <- s100 %>%
-  mutate(bin = bins)
+  mutate(bin = bins, label = "s100")
 
-s50p50 <- as_tibble(matrix(0, length(bins), 7))
-colnames(s50p50) <-  c("bin", "marginal", "std. error", "y_hat", "lower", "upper", "se_fit")
+s50p50 <- as_tibble(matrix(0, length(bins), 8))
+colnames(s50p50) <-  c("label", "bin", "marginal", "se", "y_hat", "lower", "upper", "se_fit")
 s50p50 <- s50p50 %>%
-  mutate(bin = bins)
+  mutate(bin = bins, label = "s50p50")
 
-s50r50 <- as_tibble(matrix(0, length(bins), 7))
-colnames(s50r50) <-  c("bin", "marginal", "std. error", "y_hat", "lower", "upper", "se_fit")
+s50r50 <- as_tibble(matrix(0, length(bins), 8))
+colnames(s50r50) <-  c("label", "bin", "marginal", "se", "y_hat", "lower", "upper", "se_fit")
 s50r50 <- s50r50 %>%
-  mutate(bin = bins)
+  mutate(bin = bins, label = "s50r50")
 
-thirds <- as_tibble(matrix(0, length(bins), 7))
-colnames(thirds) <-  c("bin", "marginal", "std. error", "y_hat", "lower", "upper", "se_fit")
+thirds <- as_tibble(matrix(0, length(bins), 8))
+colnames(thirds) <-  c("label", "bin", "marginal", "se", "y_hat", "lower", "upper", "se_fit")
 thirds <- thirds %>%
-  mutate(bin = bins)
+  mutate(bin = bins, label = "thirds")
 
 pred <- function(lm, sci, pol, rel){
   data <- data.frame(Science = sci, Politics = pol, Religion = rel)
@@ -107,48 +109,64 @@ for (i in 1:length(bins)){
   betas <- coef(mod1$x[[i]])
   covar <- vcov(mod1$x[[i]])
   
-  s100[i,2] <- betas["Science"]
-  s100[i,3] <- deltamethod(~ x2, betas, covar)
-  s100[i,4:7] <- as.list(pred(mod1$x[[i]], 1, 0, 0))
+  s100[i,3] <- betas["Science"]
+  s100[i,4] <- deltamethod(~ x2, betas, covar)
+  s100[i,5:8] <- as.list(pred(mod1$x[[i]], 1, 0, 0))
+
   
-  s50r50[i,2] <- betas["Science"]*0.5 + betas["Science:Religion"]*0.5
-  s50r50[i,3] <- deltamethod(~ x2*0.5 + x4*0.5, betas, covar)
-  s50r50[i,4:7] <- as.list(pred(mod1$x[[i]], 0.5, 0 ,0.5))
+  s50r50[i,3] <- betas["Science"]*0.5 + betas["Science:Religion"]*0.5
+  s50r50[i,4] <- deltamethod(~ x2*0.5 + x4*0.5, betas, covar)
+  s50r50[i,5:8] <- as.list(pred(mod1$x[[i]], 0.5, 0 ,0.5))
   
-  s50p50[i,2] <- betas["Science"]*0.5 + betas["Science:Politics"]*0.5
-  s50p50[i,3] <- deltamethod(~ x2*0.5 + x5*0.5, betas, covar)
-  s50p50[i,4:7] <- as.list(pred(mod1$x[[i]], 0.5, 0.5, 0))
+  s50p50[i,3] <- betas["Science"]*0.5 + betas["Science:Politics"]*0.5
+  s50p50[i,4] <- deltamethod(~ x2*0.5 + x5*0.5, betas, covar)
+  s50p50[i,5:8] <- as.list(pred(mod1$x[[i]], 0.5, 0.5, 0))
   
-  thirds[i,2] <- betas["Science"]*(1/3) + betas["Science:Religion"]*(1/3) + betas["Science:Politics"]*(1/3)
-  thirds[i,3] <- deltamethod(~ x2*(1/3) + x4*(1/3) + x5*(1/3), betas, covar)
-  thirds[i,4:7] <- as.list(pred(mod1$x[[i]], (1/3), (1/3), (1/3)))
+  thirds[i,3] <- betas["Science"]*(1/3) + betas["Science:Religion"]*(1/3) + betas["Science:Politics"]*(1/3)
+  thirds[i,4] <- deltamethod(~ x2*(1/3) + x4*(1/3) + x5*(1/3), betas, covar)
+  thirds[i,5:8] <- as.list(pred(mod1$x[[i]], (1/3), (1/3), (1/3)))
 }
 
+#combine into one dataset for easier plotting
+marg_pred <- rbind(s100, s50r50, s50p50, thirds)
 
-
-#Not sure how to list results yet
-# mod1 <- na.omit(mod1)
-
-
-# modelsummary(mod1,
-#              statistic = NULL,
-#              output = "../output/marginal_effects.txt")
-
-# mod1 <- data.frame(mod1)
-
-# write.csv(mod1, file = '../output/marginal_effects.csv')
-
-# a <- list(mod1$bin_20)
-# 
-# datasummary(list(bin_20) ~ estimate, data = mod1,
-#             output = 'markdown')
 ```
 
-```{r Marginal effects}
+```{r Marginal Effects Plot}
+marginal_fig <- ggplot(marg_pred, aes(x = bin, y = marginal, group = label)) +
+  geom_line(aes(color = label)) +
+  geom_ribbon(aes(y = marginal, ymin = marginal - 1.96*se, ymax = marginal + 1.96*se, fill = label), alpha = 0.2) +
+  labs(title = "Marginal Effects", x = "Year", y = "Value") +
+  scale_color_discrete(breaks = c("s100", "s50p50", "s50r50", "thirds"),
+                      labels = c("100% Science", "50% Science 50% Politics", "50% Science 50% Religion", "1/3 Each")) +
+  scale_fill_discrete(breaks = c("s100", "s50p50", "s50r50", "thirds"),
+                      labels = c("100% Science", "50% Science 50% Politics", "50% Science 50% Religion", "1/3 Each"))
 
-marginal <- as_tibble(bins)
+show(marginal_fig)
 
-marginal <- 
+```
+
+```{r Predicted Values Plot}
+marginal_fig <- ggplot(marg_pred, aes(x = bin, y = y_hat, group = label)) +
+  geom_line(aes(color = label)) +
+  geom_ribbon(aes(y = y_hat, ymin = y_hat - se_fit, ymax = y_hat + se_fit, fill = label), alpha = 0.2) +
+  labs(title = "Predicted Value", x = "Year", y = "Value") +
+  scale_color_discrete(breaks = c("s100", "s50p50", "s50r50", "thirds"),
+                      labels = c("100% Science", "50% Science 50% Politics", "50% Science 50% Religion", "1/3 Each")) +
+  scale_fill_discrete(breaks = c("s100", "s50p50", "s50r50", "thirds"),
+                      labels = c("100% Science", "50% Science 50% Politics", "50% Science 50% Religion", "1/3 Each"))
+
+marginal_fig_ci <- ggplot(marg_pred, aes(x = bin, y = y_hat, group = label)) +
+  geom_line(aes(color = label)) +
+  geom_ribbon(aes(y = y_hat, ymin = lower, ymax = upper, fill = label), alpha = 0.2) +
+  labs(title = "Predicted Value", x = "Year", y = "Value") +
+  scale_color_discrete(breaks = c("s100", "s50p50", "s50r50", "thirds"),
+                      labels = c("100% Science", "50% Science 50% Politics", "50% Science 50% Religion", "1/3 Each")) +
+  scale_fill_discrete(breaks = c("s100", "s50p50", "s50r50", "thirds"),
+                      labels = c("100% Science", "50% Science 50% Politics", "50% Science 50% Religion", "1/3 Each"))
+
+show(marginal_fig)
+show(marginal_fig_ci)
 ```
 
 ```{r Create Year and Bin Dummies}
